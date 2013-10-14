@@ -17,6 +17,7 @@
 import imaplib
 import email.mime.text
 import time
+import re
 
 class IMAPConnection:
   """Class that manages a connection to an IMAP server
@@ -28,6 +29,7 @@ class IMAPConnection:
     self.conn = imaplib.IMAP4_SSL(host, port)
     self.enc = enc
     self.mailbox = "INBOX"
+    self.uid_cache = {}
 
   def login(self, user, passwd):
     """Log in using user and passwd
@@ -57,6 +59,10 @@ class IMAPConnection:
 
     params = self.conn.uid("FETCH", uid, "(BODY[1])")
     if not params[1]:
+      # Clear from cache
+      for subject, s_uid in self.uid_cache.items():
+        if s_uid == uid:
+          self.uid_cache.pop(subject)
       return None
 
     data = params[1][0][1]
@@ -68,17 +74,36 @@ class IMAPConnection:
     subject is stored as the message's subject
     """
 
+    # Invalidate cache
+    if subject in self.uid_cache:
+      self.uid_cache.pop(subject)
+
     enc_data = self.enc.encrypt_message(data)
 
     msg = email.mime.text.MIMEText(enc_data)
     msg['Subject'] = subject
 
-    self.conn.append(self.mailbox, "(\\Seen \\Draft)", time.time(), msg.as_string())
+    results = self.conn.append(self.mailbox, "(\\Seen \\Draft)", time.time(), msg.as_string())
+
+    # Attempt to cache new UID
+    # Requires the server to provide APPENDUID statement
+    info = results[1][0]
+    match = re.search("APPENDUID [0-9]+ ([0-9]+)", info, re.I)
+    if match:
+      new_uid = match.group(1)
+      self.uid_cache[subject] = new_uid
+
 
   def delete_message(self, uid):
     """Delete a message by UID
     """
     self.conn.uid("STORE", uid, "+FLAGS", "\\Deleted")
+
+    # Invalidate cache
+    for subject, s_uid in self.uid_cache.items():
+        if s_uid == uid:
+          self.uid_cache.pop(subject)
+
     # self.conn.expunge()
 
   def search_by_subject(self, subject):
@@ -90,13 +115,20 @@ class IMAPConnection:
     uids = results[1][0].split(" ")
     if len(uids) == 1 and uids[0] == '':
       return None
+
     return uids
 
   def get_uid_by_subject(self, subject):
     """Get the UID of a single message with subject subject
     """
+    # Check cache
+    if subject in self.uid_cache:
+      return self.uid_cache[subject]
+
     results = self.search_by_subject(subject)
     if not results:
       return None
+
+    self.uid_cache[subject] = results[-1]
 
     return results[-1]
