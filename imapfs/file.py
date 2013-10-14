@@ -97,7 +97,7 @@ class File:
 
     # Close and delete truncated blocks
     end_block = self.size / FS_BLOCK_SIZE
-    for block_id, block_key in self.blocks.items():
+    for block_id in self.blocks:
       if block_id > end_block:
         self.delete_block(block_id)
         # We leave the entire last block intact, even if it got trimmed a little
@@ -227,7 +227,7 @@ class File:
     Goes through and also deletes all blocks
     """
     # Delete all blocks
-    for block_id, block_key in self.blocks.items():
+    for block_key in self.blocks.values():
       message.Message.unlink(self.message.conn, block_key)
 
     # Unlink own block

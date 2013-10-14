@@ -25,9 +25,9 @@ class IMAPEnc:
   """Class that handles crypto functions
   """
 
-  def __init__(self, passwd, iter=10000):
+  def __init__(self, passwd, iterations=10000):
     salt = "just a random salt"
-    self.key = PBKDF2(passwd, salt, AES_KEY_SIZE, iter)
+    self.key = PBKDF2(passwd, salt, AES_KEY_SIZE, iterations)
 
   def pad(self, data):
     """Return data padded to AES blocksize

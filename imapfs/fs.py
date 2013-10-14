@@ -168,7 +168,7 @@ class IMAPFS(fuse.Fuse):
     yield fuse.Direntry(".")
     yield fuse.Direntry("..")
 
-    for child_key, child_name in node.children.items():
+    for child_name in node.children.values():
       yield fuse.Direntry(child_name)
 
   def mkdir(self, path, mode):
@@ -191,7 +191,7 @@ class IMAPFS(fuse.Fuse):
     child = self.get_node_by_path(path)
     if not child:
       return -fuse.ENOENT
-    
+
     if child.__class__ != directory.Directory:
       return -fuse.ENOTDIR
 
