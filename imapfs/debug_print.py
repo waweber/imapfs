@@ -15,4 +15,5 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 def debug_print(stuff):
-  print stuff
+  pass
+  # print stuff
