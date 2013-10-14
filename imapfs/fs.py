@@ -378,3 +378,9 @@ class IMAPFS(fuse.Fuse):
       return -fuse.ENOENT
 
     self.close_node(node)
+
+  def chmod(self, path, mode):
+    return 0
+
+  def chown(self, path, user, group):
+    return 0
