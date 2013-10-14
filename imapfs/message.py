@@ -18,6 +18,7 @@ import exceptions
 import os
 import uuid
 
+
 class Message:
   """Represents an IMAP message as a file-like object
   """

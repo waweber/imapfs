@@ -15,10 +15,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import time
+import uuid
+
 from imapfs import message
 from imapfs.debug_print import debug_print
-import uuid
-import time
+
 
 FS_BLOCK_SIZE = 262144
 

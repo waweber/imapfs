@@ -14,11 +14,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from imapfs.debug_print import debug_print
-from imapfs import directory, file, message
-import fuse
 import stat
 import uuid
+
+import fuse
+
+from imapfs import directory, file, message
+from imapfs.debug_print import debug_print
+
 
 ROOT = str(uuid.UUID(bytes='\0' * 16))
 

@@ -14,10 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import imaplib
 import email.mime.text
-import time
+import imaplib
 import re
+import time
+
 
 class IMAPConnection:
   """Class that manages a connection to an IMAP server
