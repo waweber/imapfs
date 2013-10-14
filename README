@@ -1,1 +1,37 @@
 IMAPFS - Cloud storage via IMAP
+
+IMAPFS turns an inbox on your IMAP-enabled mail server into cloud storage. This
+program provides a FUSE filesystem that stores files as email messages on the
+remote server.
+
+Files are split into chunks, encrypted with AES-256, and base64 encoded before
+being stored.
+
+A few caveats exist:
+
+Since IMAP only supports 7-bit character encoding in messages, files must be
+base64 encoded. This results in a 33% overhead (only 75% of server storage space
+is available).
+
+This program relies on the SEARCH command to perform quickly. On servers where
+this command is slow, or where indexing is not immediate, performance will be
+very poor or some files may not appear for some time.
+
+Read/write speed is limited by your connection to the server, as well as the
+speed at which the server can retrieve/store messages.
+
+Since IMAP does not support writing to parts of messages, a change of a single
+byte in a message requires the entire message to be re-uploaded. As a result,
+small, random writes will have dreadful performance. Sequential writes (i.e.
+storing an entire file) are better.
+
+This filesystem must only be mounted by one client at a time. Two devices
+mounting a filesystem simultaneously will overwrite each other's changes.
+
+To mount:
+python -m imapfs [FUSE options] [-o IMAPFS OPTIONS] <mount point>
+
+The help (-h) optin will display IMAPFS options.
+To create a filesystem, add `create=true' to the IMAPFS option list.
+
+
