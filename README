@@ -32,6 +32,4 @@ To mount:
 python -m imapfs [FUSE options] [-o IMAPFS OPTIONS] <mount point>
 
 The help (-h) optin will display IMAPFS options.
-To create a filesystem, add `create=true' to the IMAPFS option list.
-
 

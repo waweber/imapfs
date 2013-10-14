@@ -42,7 +42,6 @@ class IMAPFS(fuse.Fuse):
     self.user = ""
     self.password = ""
     self.mailbox = ""
-    self.create = ""
 
   def main(self, args=None):
     # Set up imap
@@ -53,19 +52,12 @@ class IMAPFS(fuse.Fuse):
     self.imap.login(self.user, self.password)
     self.imap.select(self.mailbox)
 
-    if self.create == "true":
-      check = self.check_filesystem()
-      if check is not None:
-        raise Exception("Filesystem exists")
-
+    # Test
+    check = self.check_filesystem()
+    if check is None:
       self.init_filesystem()
-    else:
-      # Test
-      check = self.check_filesystem()
-      if check is None:
-        raise Exception("No filesystem found")
-      elif check == False:
-        raise Exception("Incorrect encryption key")
+    elif check == False:
+      raise Exception("Incorrect encryption key")
 
     # Run
     fuse.Fuse.main(self, args)
