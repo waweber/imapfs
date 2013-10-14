@@ -57,6 +57,7 @@ class Directory:
     """Writes the changes to the server
     """
     if self.dirty:
+      self.mtime = time.time()
       self.message.truncate(0)  # clear
       self.message.write("d\r\n%d\t%d\r\n" % (self.ctime, self.mtime))
       for child_key, child_name in self.children.items():

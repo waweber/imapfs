@@ -199,10 +199,13 @@ class File:
       # This also flushes/closes the open block if we are done
       self.seek(write_size, os.SEEK_CUR)
 
+    self.dirty = True
+
   def flush(self):
     """Flush changes to this file
     """
     if self.dirty:
+      self.mtime = time.time()
       self.message.truncate(0)
       self.message.write("f\r\n%d\t%d\t%d\r\n" % (self.ctime, self.mtime, self.size))
       for block_id, block_key in self.blocks.items():
