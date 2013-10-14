@@ -19,7 +19,7 @@ import uuid
 
 import fuse
 
-from imapfs import directory, file, message
+from imapfs import directory, file, imapconnection, imapenc, message
 from imapfs.debug_print import debug_print
 
 
@@ -31,10 +31,39 @@ class IMAPFS(fuse.Fuse):
   """FUSE object for imapfs
   """
 
-  def __init__(self, imap, *args, **kwargs):
-    self.imap = imap
+  def __init__(self, *args, **kwargs):
     fuse.Fuse.__init__(self, *args, **kwargs)
     self.open_nodes = {}
+
+    self.key = ""
+    self.rounds = 10000
+    self.port = 993
+    self.host = "localhost"
+    self.user = ""
+    self.password = ""
+    self.mailbox = ""
+
+  def main(self, args=None):
+    # Set up imap
+    """Sets up IMAP connection and encryption
+    """
+    enc = imapenc.IMAPEnc(self.key, int(self.rounds))
+    self.imap = imapconnection.IMAPConnection(self.host, int(self.port), enc)
+    self.imap.login(self.user, self.password)
+    self.imap.select(self.mailbox)
+
+    # Test
+    check = self.check_filesystem()
+    if check is None:
+      raise Exception("No filesystem found")
+    elif check == False:
+      raise Exception("Incorrect encryption key")
+
+    # Run
+    fuse.Fuse.main(self, args)
+
+    # Stop
+    self.imap.logout()
 
   def open_node(self, name):
     """Opens a node (file or directory)
@@ -60,6 +89,8 @@ class IMAPFS(fuse.Fuse):
     elif type_code == 'd':
       obj = directory.Directory.from_message(msg)
       debug_print("Opening directory %s" % name)
+    else:
+      raise Exception("Bad node")
 
     self.open_nodes[name] = obj
     return obj
@@ -79,8 +110,15 @@ class IMAPFS(fuse.Fuse):
     Returns False when a filesystem is present, but cannot be decrypted
     Returns None when no filesystem is found
     """
-    root = self.open_node(ROOT)
-    if not root or root.__class__ != directory.Directory:
+    try:
+      root = self.open_node(ROOT)
+    except:
+      return False
+
+    if root is None:
+      return None
+
+    if root.__class__ != directory.Directory:
       return False
 
     # check if decrypted properly
