@@ -191,6 +191,9 @@ class IMAPFS(fuse.Fuse):
     child = self.get_node_by_path(path)
     if not child:
       return -fuse.ENOENT
+    
+    if child.__class__ != directory.Directory:
+      return -fuse.ENOTDIR
 
     if len(child.children) > 0:
       return -fuse.ENOTEMPTY
