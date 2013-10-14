@@ -220,6 +220,50 @@ class IMAPFS(fuse.Fuse):
     self.close_node(node)
     parent.flush()
 
+  def rename(self, oldpath, newpath):
+    # handle dir name
+    if not self.get_path_filename(newpath):
+      newpath += self.get_path_filename(oldpath)
+
+    debug_print("Moving %s to %s" % (oldpath, newpath))
+
+    # handle same-parent
+    if self.get_path_parent(oldpath) == self.get_path_parent(newpath):
+      parent = self.get_node_by_path(self.get_path_parent(oldpath))
+      if not parent:
+        return -fuse.ENOENT
+
+      # For simplicity we do not allow overwriting
+      new_child_key = parent.get_child_by_name(self.get_path_filename(newpath))
+      if new_child_key:
+        return -fuse.EEXIST
+
+      child_key = parent.get_child_by_name(self.get_path_filename(oldpath))
+      parent.children[child_key] = self.get_path_filename(newpath)
+      parent.dirty = True
+      parent.flush()
+    else:
+      # Different parent
+      old_node = self.get_node_by_path(oldpath)
+      if not old_node:
+        return -fuse.ENOENT
+      old_parent = self.get_node_by_path(self.get_path_parent(oldpath))
+      if not old_parent:
+        return -fuse.ENOENT
+
+      # For simplicity we do not allow overwriting
+      new_node = self.get_node_by_path(newpath)
+      if new_node:
+        return -fuse.EEXIST
+
+      new_parent = self.get_node_by_path(self.get_path_parent(newpath))
+
+      # Remove old, add new
+      new_parent.add_child(old_node.message.name, self.get_path_filename(oldpath))
+      old_parent.remove_child(old_node.message.name)
+      new_parent.flush()
+      old_parent.flush()
+
   def utime(self, path, times):
     node = self.get_node_by_path(path)
     if not node:
