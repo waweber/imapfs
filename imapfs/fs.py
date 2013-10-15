@@ -85,10 +85,8 @@ class IMAPFS(fuse.Fuse):
 
     if type_code == 'f':
       obj = file.File.from_message(msg)
-      debug_print("Opening file %s" % name)
     elif type_code == 'd':
       obj = directory.Directory.from_message(msg)
-      debug_print("Opening directory %s" % name)
     else:
       raise Exception("Bad node")
 
@@ -98,7 +96,6 @@ class IMAPFS(fuse.Fuse):
   def close_node(self, node):
     """Close an open node
     """
-    debug_print("Closing node %s" % node.message.name)
     node.close()
     if node.message.name in self.open_nodes:
       self.open_nodes.pop(node.message.name)
@@ -213,6 +210,8 @@ class IMAPFS(fuse.Fuse):
     if node.__class__ != directory.Directory:
       return
 
+    debug_print("Listing %s/" % path)
+
     yield fuse.Direntry(".")
     yield fuse.Direntry("..")
 
@@ -227,6 +226,8 @@ class IMAPFS(fuse.Fuse):
     parent = self.get_node_by_path(self.get_path_parent(path))
     if not parent:
       return -fuse.EEXIST
+
+    debug_print("Creating directory %s/" % path)
 
     child = directory.Directory.create(self.imap)
     self.open_nodes[child.message.name] = child
@@ -247,6 +248,8 @@ class IMAPFS(fuse.Fuse):
     if not parent:
       return -fuse.ENOENT
 
+    debug_print("Removing directory %s/" % path)
+
     parent.remove_child(child.message.name)
     self.close_node(child)
     message.Message.unlink(self.imap, child.message.name)
@@ -260,11 +263,13 @@ class IMAPFS(fuse.Fuse):
     if not parent:
       return -fuse.ENOENT
 
+    debug_print("Creating file %s" % path)
+
     node = file.File.create(self.imap)
     self.open_nodes[node.message.name] = node
     parent.add_child(node.message.name, self.get_path_filename(path))
 
-    self.close_node(node)
+    node.flush()
 
   def rename(self, oldpath, newpath):
     # handle dir name
@@ -324,6 +329,8 @@ class IMAPFS(fuse.Fuse):
     if not parent:
       return -fuse.ENOENT
 
+    debug_print("Removing %s" % path)
+
     parent.remove_child(node.message.name)
     node.delete()
     self.open_nodes.pop(node.message.name)
@@ -335,6 +342,8 @@ class IMAPFS(fuse.Fuse):
 
     if node.__class__ != file.File:
       return -fuse.EISDIR
+
+    debug_print("Resizing %s to %d" % (path, size))
 
     node.truncate(size)
 
@@ -373,6 +382,8 @@ class IMAPFS(fuse.Fuse):
     if not node:
       return -fuse.ENOENT
 
+    debug_print("Closing %s" % path)
+
     node.close_blocks()
 
     node.flush()
@@ -381,6 +392,8 @@ class IMAPFS(fuse.Fuse):
     node = self.get_node_by_path(path)
     if not node:
       return -fuse.ENOENT
+
+    debug_print("Closing %s/" % path)
 
     node.flush()
 
