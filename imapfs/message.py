@@ -17,6 +17,7 @@
 import exceptions
 import os
 import uuid
+from imapfs.debug_print import debug_print
 
 
 class Message:
@@ -86,6 +87,8 @@ class Message:
     """Write any changes to the server
     """
     if self.dirty:
+      debug_print("Flushing %d bytes" % len(self.data))
+
       # Find old uid
       old_uid = self.conn.get_uid_by_subject(self.name)
 
