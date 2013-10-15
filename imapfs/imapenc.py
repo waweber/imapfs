@@ -18,6 +18,7 @@ from Crypto.Cipher import AES
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Random import get_random_bytes
 
+import bz2
 
 AES_KEY_SIZE = 32
 AES_BLOCK_SIZE = AES.block_size
@@ -29,6 +30,16 @@ class IMAPEnc:
   def __init__(self, passwd, iterations=10000):
     salt = "just a random salt"
     self.key = PBKDF2(passwd, salt, AES_KEY_SIZE, iterations)
+
+  def compress(self, data):
+    """Compress data
+    """
+    return bz2.compress(data)
+
+  def decompress(self, data):
+    """Decompress data
+    """
+    return bz2.decompress(data)
 
   def pad(self, data):
     """Return data padded to AES blocksize
@@ -71,11 +82,11 @@ class IMAPEnc:
     return aes.decrypt(ciphertext)
 
   def encrypt_message(self, data):
-    """Returns data padded, encrypted, and encoded
+    """Returns data compressed, padded, encrypted, and encoded
     """
-    return self.encode(self.encrypt(self.pad(data)))
+    return self.encode(self.encrypt(self.pad(self.compress(data))))
 
   def decrypt_message(self, data):
-    """Returns data decrypted. Handles padding and encoding.
+    """Returns data decrypted. Handles decompression, padding, and encoding.
     """
-    return self.unpad(self.decrypt(self.decode(data)))
+    return self.decompress(self.unpad(self.decrypt(self.decode(data))))
