@@ -232,9 +232,6 @@ class IMAPFS(fuse.Fuse):
     self.open_nodes[child.message.name] = child
     parent.add_child(child.message.name, self.get_path_filename(path))
 
-    child.flush()
-    parent.flush()
-
   def rmdir(self, path):
     child = self.get_node_by_path(path)
     if not child:
@@ -251,7 +248,6 @@ class IMAPFS(fuse.Fuse):
       return -fuse.ENOENT
 
     parent.remove_child(child.message.name)
-    parent.flush()
     self.close_node(child)
     message.Message.unlink(self.imap, child.message.name)
 
@@ -269,7 +265,6 @@ class IMAPFS(fuse.Fuse):
     parent.add_child(node.message.name, self.get_path_filename(path))
 
     self.close_node(node)
-    parent.flush()
 
   def rename(self, oldpath, newpath):
     # handle dir name
@@ -292,7 +287,6 @@ class IMAPFS(fuse.Fuse):
       child_key = parent.get_child_by_name(self.get_path_filename(oldpath))
       parent.children[child_key] = self.get_path_filename(newpath)
       parent.dirty = True
-      parent.flush()
     else:
       # Different parent
       old_node = self.get_node_by_path(oldpath)
@@ -312,8 +306,6 @@ class IMAPFS(fuse.Fuse):
       # Remove old, add new
       new_parent.add_child(old_node.message.name, self.get_path_filename(oldpath))
       old_parent.remove_child(old_node.message.name)
-      new_parent.flush()
-      old_parent.flush()
 
   def utime(self, path, times):
     node = self.get_node_by_path(path)
@@ -322,7 +314,6 @@ class IMAPFS(fuse.Fuse):
 
     node.mtime = times[1]
     node.dirty = True
-    node.flush()
 
   def unlink(self, path):
     node = self.get_node_by_path(path)
@@ -334,7 +325,6 @@ class IMAPFS(fuse.Fuse):
       return -fuse.ENOENT
 
     parent.remove_child(node.message.name)
-    parent.flush()
     node.delete()
     self.open_nodes.pop(node.message.name)
 
@@ -347,7 +337,6 @@ class IMAPFS(fuse.Fuse):
       return -fuse.EISDIR
 
     node.truncate(size)
-    node.flush()
 
   def read(self, path, size, offset):
     node = self.get_node_by_path(path)
@@ -384,8 +373,14 @@ class IMAPFS(fuse.Fuse):
     if not node:
       return -fuse.ENOENT
 
-    if node.__class__ == file.File:
-      node.close_blocks()
+    node.close_blocks()
+
+    node.flush()
+
+  def releasedir(self, path, flags):
+    node = self.get_node_by_path(path)
+    if not node:
+      return -fuse.ENOENT
 
     node.flush()
 
