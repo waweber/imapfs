@@ -34,7 +34,9 @@ class IMAPEnc:
   def compress(self, data):
     """Compress data
     """
-    return bz2.compress(data)
+    compressed = bz2.compress(data)
+    # print "Compressed %d bytes to %d (%.2f)" % (len(data), len(compressed), float(len(compressed)) / len(data))
+    return compressed
 
   def decompress(self, data):
     """Decompress data
@@ -82,11 +84,11 @@ class IMAPEnc:
     return aes.decrypt(ciphertext)
 
   def encrypt_message(self, data):
-    """Returns data compressed, padded, encrypted, and encoded
+    """Returns data padded, encrypted, and encoded
     """
-    return self.encode(self.encrypt(self.pad(self.compress(data))))
+    return self.encode(self.encrypt(self.pad(data)))
 
   def decrypt_message(self, data):
-    """Returns data decrypted. Handles decompression, padding, and encoding.
+    """Returns data decrypted. Handles padding and encoding.
     """
-    return self.decompress(self.unpad(self.decrypt(self.decode(data))))
+    return self.unpad(self.decrypt(self.decode(data)))

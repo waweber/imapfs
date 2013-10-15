@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import bz2
 import exceptions
 import os
 import uuid
@@ -29,6 +30,7 @@ class Message:
     self.data = bytearray(data)
     self.dirty = False
     self.pos = 0
+    self.compress = False
 
   def seek(self, off, whence=os.SEEK_SET):
     """Seek in the message
@@ -89,7 +91,13 @@ class Message:
       old_uid = self.conn.get_uid_by_subject(self.name)
 
       # Store message
-      self.conn.put_message(self.name, str(self.data))
+      # Compress, if requested
+      if self.compress:
+        data_str = bz2.compress(str(self.data))
+      else:
+        data_str = str(self.data)
+
+      self.conn.put_message(self.name, data_str)
 
       # Delete old version
       if old_uid:
@@ -109,7 +117,7 @@ class Message:
     return msg
 
   @staticmethod
-  def open(conn, name):
+  def open(conn, name, compressed=False):
     """Open a message with name `name'
     Raises IOError if not found
     """
@@ -122,7 +130,12 @@ class Message:
     if data is None:
       raise exceptions.IOError()
 
-    msg = Message(conn, name, data)
+    if compressed:
+      msg = Message(conn, name, bz2.decompress(data))
+      msg.compress = True
+    else:
+      msg = Message(conn, name, data)
+
     return msg
 
   @staticmethod
