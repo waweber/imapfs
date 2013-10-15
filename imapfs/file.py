@@ -45,6 +45,7 @@ class File:
     name = str(uuid.uuid4())
     block = message.Message(self.message.conn, name, "")
     block.dirty = True
+    block.compress = True
     self.blocks[block_id] = block.name
     self.open_messages[block_id] = block
     self.dirty = True
@@ -63,7 +64,7 @@ class File:
         return block
       else:
         block_key = self.blocks[block_id]
-        msg = message.Message.open(self.message.conn, block_key)
+        msg = message.Message.open(self.message.conn, block_key, compressed=True)
         self.open_messages[block_id] = msg
         return msg
 

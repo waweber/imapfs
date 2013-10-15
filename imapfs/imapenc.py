@@ -35,7 +35,7 @@ class IMAPEnc:
     """Compress data
     """
     compressed = bz2.compress(data)
-    # print "Compressed %d bytes to %d (%.2f)" % (len(data), len(compressed), float(len(compressed)) / len(data))
+    print "Compressed %d bytes to %d (%.2f)" % (len(data), len(compressed), float(len(compressed)) / len(data))
     return compressed
 
   def decompress(self, data):
