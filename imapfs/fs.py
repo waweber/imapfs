@@ -62,6 +62,10 @@ class IMAPFS(fuse.Fuse):
     # Run
     fuse.Fuse.main(self, args)
 
+    # Close all open nodes
+    for node in self.open_nodes.values():
+      self.close_node(node)
+
     # Stop
     self.imap.logout()
 
