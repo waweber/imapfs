@@ -14,7 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import bz2
 import exceptions
 import os
 import uuid
@@ -93,7 +92,7 @@ class Message:
       # Store message
       # Compress, if requested
       if self.compress:
-        data_str = bz2.compress(str(self.data))
+        data_str = self.conn.enc.compress(str(self.data))
       else:
         data_str = str(self.data)
 
@@ -131,7 +130,7 @@ class Message:
       raise exceptions.IOError()
 
     if compressed:
-      msg = Message(conn, name, bz2.decompress(data))
+      msg = Message(conn, name, conn.enc.decompress(data))
       msg.compress = True
     else:
       msg = Message(conn, name, data)
