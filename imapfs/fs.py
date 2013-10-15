@@ -377,7 +377,7 @@ class IMAPFS(fuse.Fuse):
 
     node.flush()
 
-  def releasedir(self, path, flags):
+  def releasedir(self, path):
     node = self.get_node_by_path(path)
     if not node:
       return -fuse.ENOENT
