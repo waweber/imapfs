@@ -223,12 +223,11 @@ class IMAPFS(fuse.Fuse):
       yield fuse.Direntry(child_name)
 
   def mkdir(self, path, mode):
-    node = self.get_node_by_path(path)
-    if node:
-      return -fuse.EEXIST
-
     parent = self.get_node_by_path(self.get_path_parent(path))
     if not parent:
+      return -fuse.ENOENT
+
+    if parent.get_child_by_name(self.get_path_filename(path)):
       return -fuse.EEXIST
 
     debug_print("Creating directory %s/" % path)
@@ -259,13 +258,12 @@ class IMAPFS(fuse.Fuse):
     message.Message.unlink(self.imap, child.message.name)
 
   def mknod(self, path, mode, dev):
-    node = self.get_node_by_path(path)
-    if node:
-      return -fuse.EEXIST
-
     parent = self.get_node_by_path(self.get_path_parent(path))
     if not parent:
       return -fuse.ENOENT
+
+    if parent.get_child_by_name(self.get_path_filename(path)):
+      return -fuse.EEXIST
 
     debug_print("Creating file %s" % path)
 
