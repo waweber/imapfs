@@ -214,16 +214,20 @@ class File:
       self.message.flush()
       self.dirty = False
 
-  def close(self):
-    """Close this file
-    Flushes and closes all open blocks
+  def close_blocks(self):
+    """Closes all open blocks
     """
-
     # Close all blocks
     for block_id, block in self.open_messages.items():
       debug_print("Closing open block %d" % block_id)
       block.close()
     self.open_messages = {}
+
+  def close(self):
+    """Close this file
+    Flushes and closes all open blocks
+    """
+    self.close_blocks()
     self.flush()
     self.message.close()
 

@@ -182,6 +182,13 @@ class IMAPFS(fuse.Fuse):
   # Filesystem functions
   #
 
+  def statfs(self):
+    st = fuse.StatVfs()
+    st.f_bsize = file.FS_BLOCK_SIZE
+    st.f_frsize = file.FS_BLOCK_SIZE
+
+    return st
+
   def getattr(self, path):
     node = self.get_node_by_path(path)
 
@@ -377,7 +384,10 @@ class IMAPFS(fuse.Fuse):
     if not node:
       return -fuse.ENOENT
 
-    self.close_node(node)
+    if node.__class__ == file.File:
+      node.close_blocks()
+
+    node.flush()
 
   def chmod(self, path, mode):
     return 0
