@@ -271,8 +271,6 @@ class IMAPFS(fuse.Fuse):
     self.open_nodes[node.message.name] = node
     parent.add_child(node.message.name, self.get_path_filename(path))
 
-    node.flush()
-
   def rename(self, oldpath, newpath):
     # handle dir name
     if not self.get_path_filename(newpath):
